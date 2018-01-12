@@ -13,7 +13,7 @@ class AddMessage extends Migration
      */
     public function up()
     {
-        Schema::create('message', function(Blueprint $table) {
+        Schema::create('messages', function(Blueprint $table) {
             $table->increments('id');
             $table->integer('from_id')->unsigned();
             $table->integer('to_id')->unsigned();
@@ -21,7 +21,7 @@ class AddMessage extends Migration
             $table->foreign('to_id', 'to')->references('id')->on('users')->onDelete('cascade');
             $table->text('content');
             $table->timestamp('created_at')->useCurrent();
-            $table->dateTime('read_at')->nullabl();
+            $table->dateTime('read_at')->nullable();
         });
     }
 
