@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\User;
 use App\Message;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Description of ConversationRepository
@@ -47,6 +48,12 @@ class ConversationRepository {
             'to_id' => $to
             //'created_at' => Carbon::now()
         ]);
+    }
+    
+    public function getMessagesFor(int $from, int $to): Builder {
+        return $this->message->newQuery()
+                ->whereRaw("((from_id = $from AND to_id = $to) OR (from_id = $to AND to_id = $from))")
+                ->orderBy('created_at', 'DESC');
     }
 
 }
