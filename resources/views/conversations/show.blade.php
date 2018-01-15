@@ -3,24 +3,41 @@
 @section('content')
 <div class="container">
     <div class="row">
-        @include('conversations.users', ['users' => $users])
+        @include('conversations.users', ['users' => $users, 'unread' => $unread])
         <div class="col-md-9">
             <div class="card">
 
                 <div class="card-header">{{ $user->name }}</div>
 
                 <div class="card-body conversations">
-
-                    @foreach($messages as $message)
+                    
+                    @if($messages->hasMorePages())
+                    <div class="text-center">
+                        <a href="{{ $messages->nextPageUrl() }}" class="btn btn-light">
+                            Voir les messages précédents
+                        </a>
+                    </div>
+                    @endif
+                    
+                    @foreach(array_reverse($messages->items()) as $message)
                     <div class="row">
                         <div class="col-md-10 {{ $message->from->id !== $user->id ? 'offset-md-2 text-right' : '' }}">
                             <p>
                                 <strong>{{ $message->from->id !== $user->id ? 'Moi' : $message->from->name }}</strong><br>
-                                {{ $message->content }}
+                                {!! nl2br(e($message->content)) !!}
                             </p>
                         </div>
                     </div>
+                    <hr>
                     @endforeach
+
+                    @if($messages->previousPageUrl())
+                    <div class="text-center">
+                        <a href="{{ $messages->previousPageUrl() }}" class="btn btn-light">
+                            Voir les messages plus récents
+                        </a>
+                    </div>
+                    @endif
 
                     @if($errors->any())
                     <div class="alert alert-danger">

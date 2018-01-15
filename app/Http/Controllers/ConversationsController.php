@@ -23,18 +23,30 @@ class ConversationsController extends Controller {
     public function index() {
         //we get all users except the current user
         return view('conversations/index', [
-            'users' => $this->cr->getConversations($this->auth->user()->id)
+            'users' => $this->cr->getConversations($this->auth->user()->id),
+            'unread' => $this->cr->unreadCount($this->auth->user()->id)
         ]);
     }
 
     public function show(User $user) {
+        $me = $this->auth->user();
+        
+        $messages = $this->cr
+                    ->getMessagesFor($me->id, $user->id)
+                    ->paginate(40);
+        
+        $unread = $this->cr->unreadCount($me->id);
+        
+        if(isset($unread[$user->id])) {
+            $this->cr->readAllFrom($user->id, $me->id);
+            unset($unread[$user->id]);
+        }
+        
         return view('conversations/show', [
             'users' => $this->cr->getConversations($this->auth->user()->id),
             'user' => $user,
-            'messages' => $this->cr
-                    ->getMessagesFor($this->auth->user()->id, $user->id)
-                    ->get()
-                    ->reverse()
+            'messages' => $messages,
+            'unread' => $unread
         ]);
     }
 
