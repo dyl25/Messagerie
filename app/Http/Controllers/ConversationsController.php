@@ -22,10 +22,7 @@ class ConversationsController extends Controller {
 
     public function index() {
         //we get all users except the current user
-        return view('conversations/index', [
-            'users' => $this->cr->getConversations($this->auth->user()->id),
-            'unread' => $this->cr->unreadCount($this->auth->user()->id)
-        ]);
+        return view('conversations/index');
     }
 
     public function show(User $user) {
