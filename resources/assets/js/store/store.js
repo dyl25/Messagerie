@@ -1,9 +1,9 @@
 import Vuex from 'vuex'
-import Vue from 'vue'
-//29:17
-Vue.use(Vuex)
+        import Vue from 'vue'
 
-const get = async function(url) {
+        Vue.use(Vuex)
+//49:00
+const get = async function (url) {
     let response = await fetch(url, {
         credentials: 'same-origin',
         headers: {
@@ -11,13 +11,12 @@ const get = async function(url) {
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         }
     })
-    if(response.ok) {
+    if (response.ok) {
         return response.json()
-    }else {
+    } else {
         let error = await response.json()
         throw new Error(error.message)
     }
-    debugger
 }
 
 export default new Vuex.Store({
@@ -28,21 +27,40 @@ export default new Vuex.Store({
     getters: {
         conversations: function (state) {
             return state.conversations
+        },
+        messages: function (state) {
+            return function (id) {
+                let conversation = state.conversations[id]
+                if (conversation && conversation.messages) {
+                    return conversation.messages
+                } else {
+                    return []
+                }
+            }
         }
     },
     mutations: {
-        addMessages: function(state, {conversations}) {
-            let obj = {}
-            conversations.forEach(function(conversation) {
-                obj[conversation.id] = conversation
+        addConversations: function (state, {conversations}) {
+            conversations.forEach(function (c) {
+                let conversation = state.conversations[c.id] || {}
+                conversation = {...conversation, ...c}
+                state.conversations = {...state.conversations, ...{[c.id]: conversation}}
             })
-            state.conversations = obj
+        },
+        addMessages: function (state, {messages, id}) {
+            let conversation = state.conversations[id] || {}
+            conversation.messages = messages
+            state.conversations = {...state.conversations, ...{[id]: conversation}}
         }
     },
     actions: {
-        loadConversations: async function(context) {
+        loadConversations: async function (context) {
             let response = await get('/api/conversations')
-            context.commit('addMessages', {conversations: response.conversations})
+            context.commit('addConversations', {conversations: response.conversations})
+        },
+        loadMessages: async function (context, conversationId) {
+            let response = await get('/api/conversations/' + conversationId)
+            context.commit('addMessages', {messages: response.messages, id: conversationId})
         }
     }
 })
