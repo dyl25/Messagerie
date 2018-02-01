@@ -2,7 +2,7 @@ import Vuex from 'vuex'
         import Vue from 'vue'
 
         Vue.use(Vuex)
-//49:00
+
 const get = async function (url) {
     let response = await fetch(url, {
         credentials: 'same-origin',
@@ -22,11 +22,20 @@ const get = async function (url) {
 export default new Vuex.Store({
     strict: true,
     state: {
+        user: null,
         conversations: {}
     },
     getters: {
+        user: function (state) {
+            return state.user
+        },
         conversations: function (state) {
             return state.conversations
+        },
+        conversation: function (state) {
+            return function (id) {
+                return state.conversations[id] || {}
+            }
         },
         messages: function (state) {
             return function (id) {
@@ -40,6 +49,9 @@ export default new Vuex.Store({
         }
     },
     mutations: {
+        setUser: function (state, userId) {
+            state.user = userId
+        },
         addConversations: function (state, {conversations}) {
             conversations.forEach(function (c) {
                 let conversation = state.conversations[c.id] || {}
@@ -50,6 +62,7 @@ export default new Vuex.Store({
         addMessages: function (state, {messages, id}) {
             let conversation = state.conversations[id] || {}
             conversation.messages = messages
+            conversation.loaded = true
             state.conversations = {...state.conversations, ...{[id]: conversation}}
         }
     },
@@ -59,8 +72,10 @@ export default new Vuex.Store({
             context.commit('addConversations', {conversations: response.conversations})
         },
         loadMessages: async function (context, conversationId) {
-            let response = await get('/api/conversations/' + conversationId)
-            context.commit('addMessages', {messages: response.messages, id: conversationId})
+            if (!context.getters.conversation(conversationId).loaded) {
+                let response = await get('/api/conversations/' + conversationId)
+                context.commit('addMessages', {messages: response.messages, id: conversationId})
+            }
         }
     }
 })
